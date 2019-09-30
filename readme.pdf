@@ -1,0 +1,5 @@
+Sebastian Contreras, NodeChat, 2019
+
+To use this chat application, you must first be within the NodeChat directory.
+Then, you may run the command 'node index.js'.
+Finally, copy this link into your prefered browser http://localhost:3000/?
