@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <!-- <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style> -->
+    <link rel="sylesheet" type="text/css" href="style.css">.
+  </head>
+  <body>
+    <div id ="main-panel">
+
+      <div id ="message-container">
+        
+        <div id="userlabel"></div>
+        <ul tabindex="1" id="messages"></ul>
+        <form id = "message-form" action="">
+            <input id="m" autocomplete="off" />
+            <button id="sendbutton">Send</button>
+        </form>
+
+      </div>
+      
+      <div id="user-container">
+        <ul tabindex="1" id="users"></ul>
+      </div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        $(function () {
+            var socket = io();
+            var myNickname;
+            
+            socket.on('connect', () => {
+              if(document.cookie.split(';').filter((item) => item.trim().startsWith('name=-')).length){
+                var cookieName = document.cookie.replace(/(?:(?:^|.*;\s*)name\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+                console.log(cookieName);
+                socket.emit('cookie', cookieName);
+              }
+            });
+            
+            socket.on('log', function(messages){
+               for(var i = 0; i < messages.length; i++){
+                 var time = new Date(msg.time);
+                 var mins = (time.getMinutes() < 10 ? '0' : "") + time.getMinutes();
+                 var timeString = time.getHours() + ":" + mins;
+                 var msg = messages[i];
+                 if(msg.nickname === myNickname){
+                   $('#messages').append('<li><b>'+ timeString + " " + '<span style="color: ' + msg.color +'">' +msg.nickname+'</span>' + ": "+ msg.message + "</b></li>");
+                 }else{
+                  $('#messages').append('<li>'+timeString + " " + '<span style="color: ' + msg.color +'">' +msg.nickname +'</span>' + ": " + msg.message + "</li>");
+                 }
+               } 
+               $('#messages').animate({scrollTop: $('#messages').prop("scrollHeight")}, 500);
+            });
+
+            socket.on('user update', function(users){
+              $('#users').empty();
+
+              for(var i = 0; i < users.length; i++){
+                $('#users').append($('<li>').text(users[i].name));
+			          if(users[i].id === socket.id){
+				          $('#userlabel').text("You are " + users[i].name);
+				          myNickname = users[i].name;
+				          document.cookie = 'name=' + myNickname;
+			            }
+              }
+            });
+
+            $('form').submit(function(e){
+                e.preventDefault(); //prevents page reloading
+                socket.emit('chat message', $('#m').val());
+                $('#m').val('');
+                return false;
+            });
+
+            socket.on('chat message', function(msg){
+              var time = new Date(msg.time);
+              var mins = (time.getMinutes() < 10 ? '0' : "") + time.getMinutes();
+              var timeString = time.getHours() + ": " + mins;
+              if(msg.nickname === myNickname){
+		            $('#messages').append('<li><b>'+timeString + " " + '<span style="color: ' + msg.color +'">' +msg.nickname +'</span>' + ": " + msg.message + "</b></li>");
+	              } else {
+		            $('#messages').append('<li>'+timeString + " " + '<span style="color: ' + msg.color +'">' +msg.nickname +'</span>' + ": " + msg.message + "</li>");
+	              }
+              $('#messages').animate({scrollTop: $('#messages').prop("scrollHeight")}, 500);
+            });       
+        });
+    </script>
+  </body>
+</html>
